@@ -68,3 +68,12 @@ def make_entry(type, description: str, frame_b64: str | None = None) -> SessionE
         frame_b64=frame_b64,
         ts=datetime.datetime.now(),
     )
+
+
+def entry_event(entry: SessionEntry) -> dict:
+    return {
+        "id": entry.id,
+        "type": entry.type,
+        "description": entry.description,
+        "timestamp": entry.time_stamp.isoformat(),
+    }

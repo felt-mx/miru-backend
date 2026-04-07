@@ -66,3 +66,5 @@ async def user_message(sid, data):
 
     entry = session_store.make_entry("query", description=final_output)
     session.append(entry)
+
+    await sio.emit("session_log", session_store.entry_event(entry), to=sid)
