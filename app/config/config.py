@@ -10,7 +10,8 @@ class Config:
         self.OPENAI_GEN_API_PORT = os.getenv("OPENAI_GEN_API_PORT")
         self.OPENAI_GEN_MODEL_NAME = os.getenv("OPENAI_GEN_MODEL_NAME")
         self.session_log_limit = 200
-        self.context_recent_k = 5
+        self.context_recent_k = 10
+        self.diff_threshold: float = 0.03
 
     @property
     def OPENAI_GEN_API_URL(self):

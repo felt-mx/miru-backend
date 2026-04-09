@@ -26,10 +26,10 @@ def _extract_image_payload(image_item):
     return img_data, media_type
 
 
-def build_prompt(query, images=None, chat_messages=None):
+def build_prompt(query, images=None, chat_messages=None, context=None, frame_b64=None):
     prompt = []
 
-    system_content = get_system_prompt()
+    system_content = get_system_prompt(context=context)
 
     prompt.append({"role": "system", "content": system_content})
 
@@ -52,6 +52,14 @@ def build_prompt(query, images=None, chat_messages=None):
                         "url": _format_image_url(img_str, media_type)
                     }
                 })
+
+    # if frame_b64:
+    #     user_content.append({
+    #         "type": "image_url",
+    #         "image_url": {
+    #             "url": _format_image_url(frame_b64)
+    #         }
+    #     })
 
     new_message = {"role": "user", "content": user_content}
 

@@ -12,7 +12,7 @@ class SessionStore:
         self.chat_messages: list[dict] = []
         self._log: Deque[SessionEntry] = deque(maxlen=config.session_log_limit)
         self._last_frame_b64: str | None = None
-        self._last_frame_arr: None
+        self._last_frame_arr = None
 
     # ---------------------------------------------------------------------------
     # Frame state
@@ -42,10 +42,26 @@ class SessionStore:
     def all_entries(self) -> list[SessionEntry]:
         return list(self._log)
 
+    # ---------------------------------------------------------------------------
+    # Semantic search
+    # ---------------------------------------------------------------------------
+
+    def build_context(self, query: str | None = None) -> str:
+        entries = self.recent()
+
+        if not entries:
+            return "(No prior context available)"
+
+        lines = []
+        for e in entries:
+            ts = e.time_stamp.strftime("%H:%M:%S")
+            lines.append(f"[{ts}] {e.type.upper()}: {e.description}")
+        return "\n".join(lines)
 
 # ---------------------------------------------------------------------------
 # Global registry
 # ---------------------------------------------------------------------------
+
 
 _sessions: dict[str, SessionStore] = {}
 

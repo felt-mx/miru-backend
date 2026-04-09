@@ -19,8 +19,10 @@ class QueryAgent:
         thinking: bool,
         settings: dict,
         chat_messages: list[dict] | None = None,
+        context: str | None = None,
+        frame_b64: str | None = None,
     ) -> AsyncIterator[StreamChunk]:
-        messages = build_prompt(query, files or [], chat_messages or [])
+        messages = build_prompt(query, files or [], chat_messages or [], context=context, frame_b64=frame_b64)
 
         async for chunk_type, token in self.generator.stream(messages, enable_thinking=thinking, settings=settings):
             yield {"type": chunk_type, "content": token}

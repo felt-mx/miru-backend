@@ -1,6 +1,7 @@
 import socketio
 from app.agents.query_agent.query_agent import QueryAgent
 from app.sessions import session_store
+from app.pipelines import vision
 
 sio = socketio.AsyncServer(
     async_mode="asgi",
@@ -27,6 +28,8 @@ async def disconnect(sid):
 async def user_message(sid, data):
     session = session_store.get_or_create(sid)
     query = data.get("text", "")
+    context = session.build_context(query=query)
+    frame_b64 = session.get_last_frame_b64()
     thinking = data.get("thinking", False)
     settings = data.get("settings", {})
     files = data.get("files", [])
@@ -45,6 +48,8 @@ async def user_message(sid, data):
             thinking,
             settings,
             chat_messages=session.chat_messages,
+            context=context,
+            frame_b64=frame_b64,
         ):
             if chunk["type"] in ["reasoning"]:
                 await sio.emit("assistant_thinking", chunk["content"], to=sid)
@@ -66,5 +71,27 @@ async def user_message(sid, data):
 
     entry = session_store.make_entry("query", description=final_output)
     session.append(entry)
+
+    await sio.emit("session_log", session_store.entry_event(entry), to=sid)
+
+
+@sio.event
+async def frame(sid, data):
+    frame = data.get("frame", None)
+    frame_b64 = frame.split(
+        ",", 1)[1] if frame.startswith("data:") else frame
+
+    if frame_b64 is None:
+        await sio.emit("error", "Frame data is required", to=sid)
+        return
+
+    try:
+        entry = await vision.process_frame(sid, frame_b64)
+    except Exception as e:
+        await sio.emit("error", str(e), to=sid)
+        return
+
+    if entry is None:
+        return
 
     await sio.emit("session_log", session_store.entry_event(entry), to=sid)
